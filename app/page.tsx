@@ -1,5 +1,17 @@
 import Navigation from './components/Navigation';
 
+interface NewsItem {
+  id: number;
+  attributes: {
+    episode: string;
+    title: string;
+    author: string;
+    url: string;
+    time: string;
+    introduce: string;
+  };
+}
+
 export default async function Home() {
   const CACHE_KEY = 'geekdailies_data';
   const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 缓存过期时间：24小时
@@ -43,46 +55,65 @@ export default async function Home() {
   return renderData(allData);
 }
 
-function renderData(data: any[]) {
+function renderData(data: NewsItem[]) {
+  // 按时间分类数据
+  const groupedData = data.reduce((acc, item) => {
+    const date = new Date(item.attributes.time);
+    const formattedDate = isNaN(date.getTime()) ? 'Unknown Date' : date.toLocaleDateString();
+    if (!acc[formattedDate]) {
+      acc[formattedDate] = [];
+    }
+    acc[formattedDate].push(item);
+    return acc;
+  }, {} as Record<string, NewsItem[]>);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-    <Navigation />
-    <div className="container mx-auto py-24 px-4">
-      {(
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {data.map((item: any) => (
-            <a
-              key={item.id}
-              href={item.attributes.url}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-xl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className="p-6">
-                <h2 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-primary transition duration-300 line-clamp-2">
-                  {item.attributes.title}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                  {item.attributes.introduce}
-                </p>
-                <div className="mt-4 flex items-center text-primary">
-                  <span className="text-sm font-medium">Read more</span>
-                  <svg
-                    className="ml-2 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  </main>
+      <Navigation />
+      <div className="container mx-auto py-24 px-4">
+        {Object.entries(groupedData).map(([date, items]) => (
+          <div key={date}>
+            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">{date}</h2>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {items.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.attributes.url}
+                  className="group bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-xl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-primary transition duration-300 line-clamp-2">
+                      {item.attributes.title}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                      {item.attributes.introduce}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center text-primary">
+                        <span className="text-sm font-medium">Read more</span>
+                        <svg
+                          className="ml-2 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {isNaN(new Date(item.attributes.time).getTime()) ? 'Unknown Date' : new Date(item.attributes.time).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
   );
 }
