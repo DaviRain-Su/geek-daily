@@ -1,6 +1,3 @@
-"use client"
-
-import { useState } from 'react';
 import Navigation from './components/Navigation';
 
 interface NewsItem {
@@ -55,33 +52,17 @@ export default async function Home() {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ data: allData, timestamp: Date.now() }));
   }
 
-  // 过滤掉不可访问的链接
-  const filteredData = await filterAccessibleLinks(allData);
-
+ 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <Navigation />
       <div className="container mx-auto py-24 px-4">
-        {renderDataByTime(filteredData)}
+        {renderDataByTime(allData)}
       </div>
     </main>
   );
 }
 
-async function filterAccessibleLinks(data: NewsItem[]) {
-  const accessibleLinks = await Promise.all(
-    data.map(async (item) => {
-      try {
-        const response = await fetch(item.attributes.url, { method: 'HEAD' });
-        return response.ok;
-      } catch (error) {
-        return false;
-      }
-    })
-  );
-
-  return data.filter((_, index) => accessibleLinks[index]);
-}
 
 function renderDataByTime(data: NewsItem[]) {
   // 按时间分类数据
